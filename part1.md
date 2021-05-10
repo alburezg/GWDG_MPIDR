@@ -8,43 +8,84 @@ Hands-on lab (First Part)
 -   [5. Running the R Console from the terminal](#running-the-r-console-from-the-terminal)
 -   [6. Sources](#sources)
 
-### 1. Connecting to the cluster using Windows
+### 1. Connecting to the cluster
 
-#### 1.1. Connect to the GWDG network
+#### 1.1. Make sure you have an activated GWDG account
 
-Connecting to a GWDG frontend is a two-step process if you are working from outside the GWDG network (e.g. from the MPIDR or from home). First, you need to first establish a connection to the GWDG network. For this:
+If you are an employee of MPIDR, you most likely already have a GWDG account ([GWDG portal](https://www.gwdg.de/my-account)). However, you must still activate this account for use on the GWDG cluster. You can activate your account or apply for an account if you do not have one [here](https://info.gwdg.de/docs/doku.php?id=en:services:application_services:high_performance_computing:account_activation).
 
-1.  Open Putty (available from the intranet) and change the following settings
-2.  Host Name: `login.gwdg.de`; Port: `22`; Connection Type: `SSH`
-3.  **Connection** | **Data**: Auto-login username: **firstname.lastname** (you can find your username by logging into [your GWDG account](https://www.gwdg.de/))
-4.  `Save` the session and open it using you MPIDR password (no asterix will appear as you type)
-5.  Acknowledge Putty's security alert by clicking on 'Yes'
+Since early 2020, you can no longer authenticate by password. Instead, an SSH key is required in order to log on. Below, we describe how to create SSH keys and how to log on to the GWDG cluster with them. For more details and for trouble-shooting advice, consult the [GWDG documentation](https://info.gwdg.de/docs/doku.php?id=en:services:application_services:high_performance_computing:connect_with_ssh).
 
-You are now logged into the GWDG network. *Well done!*
+#### 1.2. Checking for SSH keys
 
-However, you are not yet connected to any of the three frontends (gwdu101.gwdg.de/, gwdu102.gwdg.de/, or gwdu103.gwdg.de/). To do this we must open a new ssh connection.
+By default, your SSH keys live in `${HOME}/.ssh/` on macOS and Linux and in `%USERPROFILE%\.ssh\` on Windows (just type `%USERPROFILE%` into the address bar in file explorer). Beware that when you are working remotely, you may have to create a separate set of SSH keys for the remote machine.
 
-#### 1.2. ssh to a frontend
+#### 1.3. Create SSH keys
 
-Since the GWDG frontend servers cannot be accessed from the Internet directly, we cannot use Putty for this. To establish an ssh connection to one of the frontend, type the following on the Putty terminal:
+If you haven't found any SSH keys on your system, you can create a pair of SSH keys following the methods below. This creates both the private key file `<yourkey>` and a corresponding public key file `<yourkey>.pub`. **Never give out your private key, but always upload only the public key!**
+
+##### Using the terminal
+
+Windows 10, macOS, and Linux have SSH already built in. A key can be generated with the terminal command `ssh-keygen -t rsa -b 2048 -f <yourkey>`, substituting the desired file name for `<yourkey>` (on Windows, you may use PowerShell, Git Bash, or Cygwin). While you can create an SSH key without a passphrase, GWDG strongly recommends creating a passphrase as an additional security measure.
+
+##### Using PuTTYgen (Windows)
+
+Open PuTTYgen, click `Generate`, and follow the instructions. GWDG strongly recommends creating a passphrase as an additional security measure.
+
+##### (Optional) Add your keys to the ssh-agent
+
+Check out Github's [instructions](https://docs.github.com/en/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) on how to add your keys to the ssh-agent. Make sure to select the correct OS.
+
+#### 1.4. Upload your public key to GWDG
+
+You need to upload your _public_ key to your GWDG account. Your public key is saved in the file with the `.pub` extension. Log into your account on the GWDG Website, go to "My Account," scroll down to "Other Settings," and click "edit". You can now add a public key. If you copy your public key from a text editor or a terminal, please make sure that your editor or your terminal does not insert any linebreaks, because this will make the copy of your public key invalid.
+
+#### 1.5. Log on to the gateway
+
+If you are working from outside the GWDG network (e.g. from the MPIDR or from home), you need to connect first to the network's gateway and then to one of the computing cluster's frontend. Note that the following commands all assume that the relative path to your SSH key is `.ssh/id-rsa`.
+
+##### Using the terminal
+
+On macOS and Linux, this should usually work: `ssh login-fas.hpc.gwdg.de -l <userid> -i .ssh/id-rsa -J <userid>@login.gwdg.de`. You can find your user ID by logging into [your GWDG account](https://www.gwdg.de/).
+
+If it doesn't, try: `ssh login-fas.hpc.gwdg.de -l <userid> -i .ssh/id-rsa -o ProxyCommand="ssh -i .ssh/id-rsa -W %h:%p <userid>@login.gwdg.de"`.
+
+On Windows, use: `ssh login-fas.hpc.gwdg.de -l <userid> -i .ssh/id-rsa -o ProxyCommand="ssh.exe -i .ssh/id-rsa -W %h:%p <userid>@login.gwdg.de"`.
+
+(Optional) To avoid typing the full command every time you want to connect, you can store them in a text file (instructions [here](https://info.gwdg.de/docs/doku.php?id=en:services:application_services:high_performance_computing:connect_with_ssh)). Then you can connect simply by typing `ssh <profile name>` (in the instructions, the example profile names are `gwdg-login` and `hpc-gwdg`).
+
+##### Using Putty/SSH-Agent/Pageant (Windows)
+
+Just follow [this video](https://info.gwdg.de/docs/doku.php?id=en:services:application_services:high_performance_computing:connect_with_ssh:ssh_agent). Note that you can save the PuTTY configuration. That way, you can later reconnect by right-clicking on Pageant in the tray > `Saved Sessions` > `<session name>`.
+
+
+#### 1.6. SSH to a frontend
+
+If everything went well, then your terminal prompt should look something like this:
 
 ``` bash
-ssh gwdu102.gwdg.de
+gwdu101:51 10:37:08 ~ >
 ```
+
+Congratulations, you are connected to the GWDG cluster!
+
+If instead it looks like this, then you are logged in to `login.gwdg.de` and need to ssh into one of the frontends like so `ssh gwdu102`.
+
+``` bash
+<yourusername>@gwdu19:~>
+```
+
+#### Message: `The authenticity of host ... can't be established`
+
+When connecting to the gateway or one of the frontends, you may see a message like the one below. You can accept the connection by typing 'yes'.
 
 > The authenticity of host ’gwdu101.gwdg.de (134.76.8.101)’ can’t be established. ECDSA key fingerprint is SHA256:sIJNEepmILeEq/7Zqq4HCtpTM8L98arWTny5EiAX+gI. or ECDSA key fingerprint is 7c:52:2b:17:f8:ba:29:bd:c5:45:d1:1a:9e:8d:d6:f0. or RSA key fingerprint is b9:f9:46:0f:23:c8:8d:76:b9:83:b9:1b:f6:5e:d5:6b. Are you sure you want to continue connecting (yes/no)?
 
-Accept the connection by typing 'yes'.
-
-Welcome to the the gwdu102.gwdg.de frontend of the GWDG cluster! If you see something like this, you are now ready to write Linux commands in the terminal:
-
-``` bash
-gwdu102:5 10:37:08 ~ >
-```
-
 ### 2. Working with files and directories
 
-#### 2.1. Basic Linux commans - a refresher
+The GWDG cluster runs a Linux distribution called [Scientific Linux](https://scientificlinux.org/). The rest of this section will go over basic commands that should help you accomplish most of what you want to do. If you want a more thorough introduction that is explicitly written for new users, [The Linux Command Line](http://www.linuxcommand.org/tlcl.php/) by William Shotts remains a classic (if you are not interested in why Linux is the bee's knees, you can skip the introduction and go straight to "Part 1 - Learning the Shell").
+
+#### 2.1. Basic Linux commands - a refresher
 
 These are some useful Linux commands that we will use in the next section to create, explore, and edit files from the terminal:
 
@@ -65,15 +106,15 @@ These are some useful Linux commands that we will use in the next section to cre
 | df (-h) (-hl) | show disk space                          |
 | chmod         | change file attributes                   |
 
-#### 2.2. \[Optional\] Changing language to English
+#### 2.2. (Optional) Changing languages
 
-By default, the cluster operates in German. You can check the language settings by typing:
+To check in which language your account is set up to operate, type:
 
 ``` bash
 echo $LANG
 ```
 
-You can change this for the current session:
+You can change this to English for the current session:
 
 ``` bash
 export LANG=en_US.UTF-8
@@ -82,10 +123,23 @@ export LANG=en_US.UTF-8
 For a permanent solution, add the command to the `.profile` file with:
 
 ``` bash
-echo 'export LANG=en_US.UTF-8’ >> ~/.profile
+echo 'export LANG=en_US.UTF-8' >> ~/.profile
 ```
 
-#### 2.3. Exploring and modifying directories
+If you prefer a different language, change available languages by typing:
+
+``` bash
+locale -a
+```
+
+To understand the differences between different configurations or to search for your preferred language, you can consult [Understanding the Locales on Debian GNU/Linux](https://linuxhint.com/locales_debian/) or [Locale Helper](https://lh.2xlibre.net/locales/).
+
+
+#### 2.3. (Optional) Changing your shell
+
+The default shell on GWDG is `ksh`. Other available shells are `bash`, `tcsh`, and `sh`. Most Linux distributions (and macOS) default to `bash`. In consequence, most tutorials or examples online assume that you are using `bash`. If you want to change the default shell, log in to your GWDG account, go to My Account > Other settings > Edit, and select your desired shell.
+
+#### 2.4. Exploring and modifying directories
 
 To list the files in your current directory, type `ls`
 
@@ -106,7 +160,7 @@ drwx------   3 d.alburezgutierrez MRDF     0 Oct 23 12:02 intel
 drwx------   2 d.alburezgutierrez MRDF     0 Sep 25 10:42 Mail
 ```
 
-#### 2.4. Permission settings
+#### 2.5. Permission settings
 
 The previous command showed a series of permission settings associated with each file in our current directory.
 
@@ -144,7 +198,7 @@ There are two ways of changing permissions: by specifying the `{options}` with n
 | +             | add permission                      |
 | -             | remove permission                   |
 
-Let's see an example. First we will create an empty directory, check it's current permission settings, and then edit these to make the directory 'ready-only' (i.e. remove 'write' permissions).
+Let's see an example. First we will create an empty directory, check its current permission settings, and then edit these to make the directory 'read-only' (i.e. remove 'write' permissions).
 
 ``` bash
 mkdir per_test
@@ -206,7 +260,7 @@ By displaying the content of the directory `per_test` we can see that the permis
 <!-- ``` -->
 Permissions are useful for granting and restricting access to specific directories and files in a way that will be familiar to users of the MPIDR's `N:` drive. However, note that the cluster administrators have access to all directories stored in the cluster. Please do not store sensitive information in the cluster without first getting in touch with the GDGW security team.
 
-#### 2.5. Editing text files from the terminal with `nano`
+#### 2.6. Editing text files from the terminal with `nano`
 
 The terminal is the only way of interacting with the GWDG cluster. Graphical User Interface (GUI) are, with a few exceptions, not available. Text files can be edited from within the terminal using editors such as: `vi`, `mcedit`, `joe`, or `nano`.
 
